@@ -41,6 +41,19 @@ export const SOCKET_EVENTS = {
   COMMENT_NEW: 'comment:new',
   NOTIFICATION_NEW: 'notification:new',
   NOTIFICATION_READ: 'notification:read',
+
+  // WebRTC Voice & Video Calling Events
+  CALL_INITIATE: 'call:initiate',
+  CALL_INCOMING: 'call:incoming',
+  CALL_ACCEPT: 'call:accept',
+  CALL_ACCEPTED: 'call:accepted',
+  CALL_REJECT: 'call:reject',
+  CALL_REJECTED: 'call:rejected',
+  CALL_END: 'call:end',
+  CALL_ENDED: 'call:ended',
+  CALL_SIGNAL: 'call:signal',
+  CALL_BUSY: 'call:busy',
+  CALL_MISSED: 'call:missed',
 };
 
 export default SOCKET_EVENTS;
