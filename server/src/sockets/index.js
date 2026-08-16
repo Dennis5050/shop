@@ -7,6 +7,7 @@ import { registerMessageHandlers } from './handlers/message.handler.js';
 import { registerReceiptHandlers } from './handlers/receipt.handler.js';
 import { registerTypingHandlers } from './handlers/typing.handler.js';
 import { registerReactionHandlers } from './handlers/reaction.handler.js';
+import { registerCallHandlers } from './handlers/call.handler.js';
 import { logger } from '../utils/logger.js';
 import config from '../config/index.js';
 
@@ -38,6 +39,7 @@ export function initializeSocketServer(httpServer) {
     registerReceiptHandlers(io, socket);
     registerTypingHandlers(io, socket);
     registerReactionHandlers(io, socket);
+    registerCallHandlers(io, socket);
 
     socket.on('error', (err) => {
       logger.error(`Socket error on ${socket.id}:`, err);
