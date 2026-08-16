@@ -1,0 +1,32 @@
+{
+  "name": "nexus-socket-platform",
+  "version": "1.0.0",
+  "description": "Production-Grade MERN + Socket.IO Real-Time Social & Messaging Platform",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "start": "npm run start --workspace=server",
+    "server": "npm run dev --workspace=server",
+    "client": "npm run dev --workspace=client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "test": "npm run test --workspace=server",
+    "build": "npm run build --workspace=client"
+  },
+  "keywords": [
+    "mern",
+    "socket.io",
+    "realtime",
+    "messaging",
+    "chat",
+    "social",
+    "presence",
+    "reactions",
+    "webrtc"
+  ],
+  "author": "Dennis Kiplagat <denniskipkorir308@gmail.com>",
+  "license": "MIT"
+}
