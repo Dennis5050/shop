@@ -8,45 +8,47 @@ on:
 
 jobs:
   test-server:
-    name: Backend Server Tests
+    name: Backend Server Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install server dependencies
-        working-directory: ./server
+      - name: Install dependencies (Workspaces)
         run: npm ci
 
       - name: Run server test suites
-        working-directory: ./server
-        run: npm test
+        run: npm test --workspace=server
 
   build-client:
-    name: Frontend Client Build
+    name: Frontend Client Build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install client dependencies
-        working-directory: ./client
+      - name: Install dependencies (Workspaces)
         run: npm ci
 
       - name: Run Vite production build
-        working-directory: ./client
-        run: npm run build
+        run: npm run build --workspace=client
