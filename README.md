@@ -15,6 +15,8 @@
 
 ### 💬 Real-Time Messaging & Chat
 * **One-on-One & Group Chats**: Instant real-time message exchange with persistence-first architecture.
+* **🎤 In-Browser Voice Notes**: Native MediaRecorder audio capture with interactive waveform visualizer scrubber and variable playback speeds (1x, 1.5x, 2x).
+* **📷 Photo & Video Sharing**: Drag-and-drop media upload modal with captioning, preview player, and fullscreen lightbox viewer.
 * **Message Delivery States**: Real-time lifecycle tracking:
   - 🕒 `sending` $\rightarrow$ Client-side optimistic dispatch
   - ⏱️ `sent` $\rightarrow$ Confirmed and persisted to MongoDB
@@ -23,6 +25,13 @@
 * **Debounced Typing Indicators**: Ephemeral real-time broadcast without MongoDB overhead.
 * **Emoji Message Reactions**: Real-time reactive emoji counters on individual messages.
 * **Threaded Replies & Soft Deletion**: Contextual quotes and "Delete for Everyone".
+
+### 📞 WebRTC Voice & Video Calling
+* **One-on-One HD Video Calls**: Peer-to-peer WebRTC connection with fullscreen remote view and draggable picture-in-picture local camera stream.
+* **High-Definition Voice Calls**: Low-latency voice calling with acoustic pulse visualizer rings and microphone mute control.
+* **Real-Time Signaling Protocol**: Session description protocol (SDP Offer/Answer) and ICE Candidate relay over Socket.IO.
+* **Busy State & Duration Tracking**: Call collision prevention, rejection handling, and live call timer.
+* **Web Audio Synthesized Tones**: In-browser synthesized outgoing ringing and incoming call ringtones.
 
 ### 👥 Presence & Multi-Device Synchronization
 * **Multi-Device State Tracking**: Connect from multiple browser tabs or devices simultaneously without presence collision.
