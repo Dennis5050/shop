@@ -1,6 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 export function useSound() {
+  const ringtoneIntervalRef = useRef(null);
+
   const playNotification = useCallback(() => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -53,9 +55,41 @@ export function useSound() {
     }
   }, []);
 
+  const playIncomingRingtone = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(440, ctx.currentTime); // A4
+      osc2.frequency.setValueAtTime(480, ctx.currentTime); // 480Hz US ring tone
+
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 0.8);
+      osc2.stop(ctx.currentTime + 0.8);
+    } catch {
+      // Audio playback ignored
+    }
+  }, []);
+
   return {
     playNotification,
     playSent,
+    playIncomingRingtone,
   };
 }
 
