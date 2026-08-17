@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2 } from 'lucide-react';
+import { Play, Pause, Mic } from 'lucide-react';
 
-const WAVEFORM_BARS = [40, 65, 80, 45, 90, 70, 30, 85, 95, 60, 40, 75, 85, 50, 65, 90, 45, 35, 70, 80, 60, 40];
+const WAVEFORM_BARS = [30, 50, 80, 45, 95, 70, 40, 85, 90, 60, 40, 75, 85, 55, 65, 90, 50, 35, 70, 80, 60, 40, 30, 50];
 
 export function VoiceNotePlayer({ audioUrl, duration = 0, isOutgoing = false }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,28 +79,24 @@ export function VoiceNotePlayer({ audioUrl, duration = 0, isOutgoing = false }) 
   const progressRatio = total > 0 ? Math.min(1, currentTime / total) : 0;
 
   return (
-    <div className="flex items-center gap-3 py-1 min-w-[200px] sm:min-w-[240px]">
+    <div className="flex items-center gap-3 py-1 min-w-[240px] sm:min-w-[280px]">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
-      {/* Play/Pause Button */}
+      {/* WhatsApp Play/Pause Button */}
       <button
         type="button"
         onClick={togglePlay}
-        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 outline-none ${
-          isOutgoing
-            ? 'bg-white text-brand-600 hover:bg-slate-100'
-            : 'bg-brand-600 text-white hover:bg-brand-500'
-        }`}
+        className="w-10 h-10 rounded-full bg-[#00a884] hover:bg-[#008069] text-white flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 outline-none"
         title={isPlaying ? 'Pause voice note' : 'Play voice note'}
       >
-        {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+        {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
       </button>
 
-      {/* Waveform Visualizer */}
-      <div className="flex-1 flex flex-col gap-1">
+      {/* Waveform Scrubber & Metadata */}
+      <div className="flex-1 flex flex-col gap-1.5">
         <div
           onClick={handleSeek}
-          className="h-6 flex items-center gap-[2.5px] cursor-pointer py-1 group"
+          className="h-7 flex items-center gap-[2.5px] cursor-pointer py-1 group"
         >
           {WAVEFORM_BARS.map((heightPercent, index) => {
             const barRatio = (index + 1) / WAVEFORM_BARS.length;
@@ -109,33 +105,30 @@ export function VoiceNotePlayer({ audioUrl, duration = 0, isOutgoing = false }) 
             return (
               <span
                 key={index}
-                style={{ height: `${Math.max(15, heightPercent)}%` }}
+                style={{ height: `${Math.max(20, heightPercent)}%` }}
                 className={`w-1 rounded-full transition-all duration-100 ${
                   isPlayed
-                    ? isOutgoing
-                      ? 'bg-white'
-                      : 'bg-brand-500'
+                    ? 'bg-[#00a884]'
                     : isOutgoing
                     ? 'bg-white/40 group-hover:bg-white/60'
-                    : 'bg-slate-600 group-hover:bg-slate-500'
+                    : 'bg-[#8696a0] group-hover:bg-[#aebac1]'
                 }`}
               />
             );
           })}
         </div>
 
-        {/* Time & Speed metadata */}
-        <div className="flex items-center justify-between text-[11px] opacity-80">
-          <span>{formatTime(currentTime > 0 ? currentTime : total)}</span>
+        {/* WhatsApp Duration & Speed button */}
+        <div className="flex items-center justify-between text-[11px] text-[#8696a0]">
+          <span className="flex items-center gap-1 font-mono">
+            <Mic className="w-3 h-3 text-[#00a884]" />
+            {formatTime(currentTime > 0 ? currentTime : total)}
+          </span>
           <button
             type="button"
             onClick={cycleSpeed}
-            className={`px-1.5 py-0.2 rounded-md font-bold text-[10px] uppercase transition-colors ${
-              isOutgoing
-                ? 'bg-white/20 hover:bg-white/30 text-white'
-                : 'bg-slate-700/80 hover:bg-slate-600 text-slate-300'
-            }`}
-            title="Change playback speed"
+            className="px-1.5 py-0.5 rounded bg-[#202c33] hover:bg-[#2a3942] text-[#e9edef] font-bold text-[10px] uppercase border border-[#2a3942] transition-colors"
+            title="Playback speed"
           >
             {playbackRate}x
           </button>

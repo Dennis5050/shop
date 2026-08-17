@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Smile, Paperclip, X, Image as ImageIcon, Mic } from 'lucide-react';
+import { Send, Smile, Plus, X, Image as ImageIcon, Mic, FileText, Camera, User as UserIcon } from 'lucide-react';
 import { useTypingEmitter } from '../../hooks/useTypingEmitter.js';
 import { useSound } from '../../hooks/useSound.js';
 import { VoiceNoteRecorder } from './VoiceNoteRecorder.jsx';
@@ -10,6 +10,7 @@ const COMMON_EMOJIS = ['😊', '😂', '🔥', '❤️', '👍', '🎉', '🚀',
 export function MessageComposer({ conversationId, onSendMessage, replyingTo, onCancelReply }) {
   const [content, setContent] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
@@ -71,33 +72,33 @@ export function MessageComposer({ conversationId, onSendMessage, replyingTo, onC
   };
 
   return (
-    <div className="relative border-t border-chat-border bg-chat-sidebar p-3">
-      {/* Replying Banner */}
+    <div className="relative bg-[#202c33] px-4 py-2 select-none">
+      {/* Replying Context Banner */}
       {replyingTo && (
-        <div className="flex items-center justify-between bg-chat-panel px-3.5 py-2 rounded-xl mb-2 border-l-4 border-brand-500 border border-chat-border/50 text-xs">
+        <div className="flex items-center justify-between bg-[#182229] px-3.5 py-2 rounded-lg mb-2 border-l-4 border-[#00a884] border border-[#222d34] text-xs">
           <div className="min-w-0">
-            <span className="font-semibold text-brand-400">
-              Replying to {replyingTo.sender?.displayName || 'User'}
+            <span className="font-semibold text-[#00a884]">
+              {replyingTo.sender?.displayName || 'User'}
             </span>
-            <p className="text-chat-muted truncate">{replyingTo.content || `[${replyingTo.type}]`}</p>
+            <p className="text-[#8696a0] truncate">{replyingTo.content || `[${replyingTo.type}]`}</p>
           </div>
           <button
             onClick={onCancelReply}
-            className="p-1 rounded-lg text-chat-muted hover:text-white transition-colors"
+            className="p-1 rounded-md text-[#8696a0] hover:text-[#e9edef] transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Emoji Picker Popup */}
+      {/* WhatsApp Emoji Picker */}
       {showEmojiPicker && (
-        <div className="absolute bottom-16 left-4 bg-chat-panel border border-chat-border rounded-2xl p-3 shadow-2xl z-30 grid grid-cols-7 gap-2 animate-slide-up">
+        <div className="absolute bottom-16 left-4 bg-[#233138] border border-[#2a3942] rounded-2xl p-3 shadow-2xl z-30 grid grid-cols-7 gap-2 animate-slide-up">
           {COMMON_EMOJIS.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleInsertEmoji(emoji)}
-              className="text-xl p-1.5 rounded-xl hover:bg-chat-hover hover:scale-125 transition-transform"
+              className="text-xl p-1.5 rounded-xl hover:bg-[#182229] hover:scale-125 transition-transform"
             >
               {emoji}
             </button>
@@ -105,63 +106,115 @@ export function MessageComposer({ conversationId, onSendMessage, replyingTo, onC
         </div>
       )}
 
-      {/* Voice Note Recorder Mode vs Standard Input Bar */}
+      {/* WhatsApp Attachment Menu */}
+      {showAttachMenu && (
+        <div className="absolute bottom-16 left-12 bg-[#233138] border border-[#2a3942] rounded-2xl p-3 shadow-2xl z-30 flex flex-col gap-2 animate-slide-up w-52">
+          <button
+            onClick={() => {
+              setShowAttachMenu(false);
+              setIsMediaModalOpen(true);
+            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#182229] text-sm text-[#e9edef] transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white">
+              <ImageIcon className="w-4 h-4" />
+            </div>
+            <span>Photos & videos</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setShowAttachMenu(false);
+              setIsMediaModalOpen(true);
+            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#182229] text-sm text-[#e9edef] transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white">
+              <Camera className="w-4 h-4" />
+            </div>
+            <span>Camera</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setShowAttachMenu(false);
+              setIsMediaModalOpen(true);
+            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#182229] text-sm text-[#e9edef] transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+              <FileText className="w-4 h-4" />
+            </div>
+            <span>Document</span>
+          </button>
+        </div>
+      )}
+
+      {/* Voice Note Recorder Mode vs WhatsApp Input Bar */}
       {isRecordingVoice ? (
         <VoiceNoteRecorder
           onSendVoiceNote={handleSendVoiceNote}
           onCancel={() => setIsRecordingVoice(false)}
         />
       ) : (
-        <div className="flex items-end gap-2 bg-chat-panel border border-chat-border/80 rounded-2xl px-3 py-1.5 focus-within:border-brand-500 transition-colors">
+        <div className="flex items-center gap-2">
           {/* Emoji Button */}
           <button
             type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2 text-chat-muted hover:text-amber-400 hover:bg-chat-hover rounded-xl transition-colors shrink-0 mb-0.5"
-            title="Insert Emoji"
+            onClick={() => {
+              setShowEmojiPicker(!showEmojiPicker);
+              setShowAttachMenu(false);
+            }}
+            className="p-2 text-[#8696a0] hover:text-[#e9edef] transition-colors shrink-0"
+            title="Emojis"
           >
-            <Smile className="w-5 h-5" />
+            <Smile className="w-6 h-6" />
           </button>
 
-          {/* Attach Photo / Video Button */}
+          {/* Plus Attachment Button */}
           <button
             type="button"
-            onClick={() => setIsMediaModalOpen(true)}
-            className="p-2 text-chat-muted hover:text-brand-400 hover:bg-chat-hover rounded-xl transition-colors shrink-0 mb-0.5"
-            title="Attach Photo or Video"
+            onClick={() => {
+              setShowAttachMenu(!showAttachMenu);
+              setShowEmojiPicker(false);
+            }}
+            className="p-2 text-[#8696a0] hover:text-[#e9edef] transition-colors shrink-0"
+            title="Attach"
           >
-            <ImageIcon className="w-5 h-5" />
+            <Plus className="w-6 h-6" />
           </button>
 
-          {/* Text Area */}
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            rows={1}
-            className="flex-1 bg-transparent text-chat-bubbleText text-sm outline-none resize-none py-2 max-h-32 placeholder:text-chat-muted/60"
-          />
+          {/* WhatsApp Text Input Pill */}
+          <div className="flex-1 bg-[#2a3942] rounded-lg px-4 py-2 flex items-center">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message"
+              rows={1}
+              className="w-full bg-transparent text-[#e9edef] text-sm outline-none resize-none max-h-32 placeholder:text-[#8696a0]"
+            />
+          </div>
 
-          {/* Send or Mic Button */}
+          {/* WhatsApp Send or Voice Mic Button */}
           {content.trim() ? (
             <button
               type="button"
               onClick={handleSend}
-              className="p-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-all shrink-0 mb-0.5"
-              title="Send message"
+              className="w-10 h-10 rounded-full bg-[#00a884] hover:bg-[#008069] text-white flex items-center justify-center shadow-md transition-transform active:scale-95 shrink-0"
+              title="Send"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5 ml-0.5" />
             </button>
           ) : (
             <button
               type="button"
               onClick={() => setIsRecordingVoice(true)}
-              className="p-2 rounded-xl text-chat-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0 mb-0.5"
-              title="Record Voice Note"
+              className="p-2 text-[#8696a0] hover:text-[#e9edef] transition-colors shrink-0"
+              title="Record voice note"
             >
-              <Mic className="w-5 h-5" />
+              <Mic className="w-6 h-6" />
             </button>
           )}
         </div>

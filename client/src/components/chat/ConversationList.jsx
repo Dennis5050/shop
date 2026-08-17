@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Search, Plus, Users, MessageSquarePlus } from 'lucide-react';
+import { Search, MessageSquarePlus, MoreVertical, CheckCheck, Check, Filter } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore.js';
 import { useAuthStore } from '../../store/authStore.js';
 import { usePresenceStore } from '../../store/presenceStore.js';
 import { Avatar } from '../ui/Avatar.jsx';
-import { Badge } from '../ui/Badge.jsx';
-import { formatDistanceToNowStrict } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 
 export function ConversationList({ onOpenNewChat, onOpenNewGroup }) {
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all' | 'unread' | 'groups'
+  const [showMenu, setShowMenu] = useState(false);
+
   const conversations = useChatStore((s) => s.conversations);
   const activeConversation = useChatStore((s) => s.activeConversation);
   const setActiveConversation = useChatStore((s) => s.setActiveConversation);
@@ -17,6 +19,9 @@ export function ConversationList({ onOpenNewChat, onOpenNewGroup }) {
   const currentUser = useAuthStore((s) => s.user);
 
   const filteredConversations = conversations.filter((c) => {
+    if (filter === 'unread' && (!c.unreadCount || c.unreadCount === 0)) return false;
+    if (filter === 'groups' && c.type !== 'group') return false;
+
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     if (c.type === 'group') {
@@ -29,62 +34,124 @@ export function ConversationList({ onOpenNewChat, onOpenNewGroup }) {
     );
   });
 
+  const formatChatTime = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isToday(date)) return format(date, 'HH:mm');
+      if (isYesterday(date)) return 'Yesterday';
+      return format(date, 'dd/MM/yyyy');
+    } catch {
+      return '';
+    }
+  };
+
   return (
-    <div className="w-full md:w-80 lg:w-96 bg-chat-sidebar border-r border-chat-border flex flex-col h-full shrink-0 select-none">
-      {/* Header */}
-      <div className="p-4 border-b border-chat-border flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white tracking-tight">Messages</h2>
-        <div className="flex items-center gap-1.5">
+    <div className="w-full md:w-80 lg:w-[400px] bg-[#111b21] border-r border-[#222d34] flex flex-col h-full shrink-0 select-none">
+      {/* WhatsApp Header */}
+      <div className="h-16 px-4 bg-[#202c33] flex items-center justify-between shrink-0">
+        <h2 className="text-xl font-bold text-[#e9edef] tracking-tight">Chats</h2>
+        <div className="flex items-center gap-2 text-[#aebac1]">
           <button
             onClick={onOpenNewChat}
-            title="New Chat"
-            className="p-2 rounded-xl text-chat-muted hover:text-white hover:bg-chat-hover transition-colors"
+            title="New chat"
+            className="p-2 rounded-full hover:bg-[#374248] transition-colors"
           >
-            <MessageSquarePlus className="w-4 h-4" />
+            <MessageSquarePlus className="w-5 h-5" />
           </button>
-          <button
-            onClick={onOpenNewGroup}
-            title="New Group"
-            className="p-2 rounded-xl text-chat-muted hover:text-white hover:bg-chat-hover transition-colors"
-          >
-            <Users className="w-4 h-4" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              title="Menu"
+              className="p-2 rounded-full hover:bg-[#374248] transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-12 w-48 bg-[#233138] border border-[#2a3942] rounded-xl shadow-2xl py-2 z-30 animate-fade-in text-sm text-[#d1d7db]">
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onOpenNewGroup();
+                  }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#182229] transition-colors"
+                >
+                  New group
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onOpenNewChat();
+                  }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#182229] transition-colors"
+                >
+                  New community
+                </button>
+                <button
+                  onClick={() => setShowMenu(false)}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#182229] transition-colors"
+                >
+                  Starred messages
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="px-4 py-3 border-b border-chat-border/50">
-        <div className="relative flex items-center">
-          <Search className="w-4 h-4 text-chat-muted absolute left-3 pointer-events-none" />
+      {/* WhatsApp Search Bar & Filter Pills */}
+      <div className="p-3 space-y-2 border-b border-[#222d34]/60">
+        <div className="relative flex items-center bg-[#202c33] rounded-lg px-3 py-1.5">
+          <Search className="w-4 h-4 text-[#8696a0] shrink-0 mr-3" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations..."
-            className="w-full bg-chat-panel text-xs text-chat-bubbleText pl-9 pr-3 py-2 rounded-xl border border-chat-border/80 focus:border-brand-500 focus:outline-none transition-colors placeholder:text-chat-muted/60"
+            placeholder="Search or start new chat"
+            className="w-full bg-transparent text-xs text-[#e9edef] placeholder:text-[#8696a0] outline-none"
           />
+        </div>
+
+        {/* WhatsApp Filter Chips */}
+        <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'unread', label: 'Unread' },
+            { id: 'groups', label: 'Groups' },
+          ].map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => setFilter(chip.id)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                filter === chip.id
+                  ? 'bg-[#00a884]/20 text-[#00a884] border border-[#00a884]/40 font-semibold'
+                  : 'bg-[#202c33] text-[#8696a0] hover:text-[#e9edef] hover:bg-[#2a3942]'
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Conversations Stream */}
-      <div className="flex-1 overflow-y-auto divide-y divide-chat-border/20">
+      {/* Conversation List Items */}
+      <div className="flex-1 overflow-y-auto divide-y divide-[#222d34]/40">
         {filteredConversations.length === 0 ? (
-          <div className="p-8 text-center text-chat-muted flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-chat-panel flex items-center justify-center text-chat-muted">
-              <Search className="w-5 h-5" />
-            </div>
-            <p className="text-xs">No conversations found</p>
+          <div className="p-8 text-center text-[#8696a0] flex flex-col items-center gap-3">
+            <Search className="w-8 h-8 opacity-40" />
+            <p className="text-xs">No chats found</p>
             <button
               onClick={onOpenNewChat}
-              className="text-xs text-brand-400 font-semibold hover:underline mt-1"
+              className="text-xs text-[#00a884] font-semibold hover:underline"
             >
-              Start a new conversation
+              Start chatting
             </button>
           </div>
         ) : (
           filteredConversations.map((conv) => {
-            const convId = conv._id || conv.id;
-            const isActive = activeConversation && (activeConversation._id || activeConversation.id) === convId;
+            const convId = String(conv._id || conv.id);
+            const isActive = activeConversation && String(activeConversation._id || activeConversation.id) === convId;
             const isGroup = conv.type === 'group';
 
             let title = 'Chat';
@@ -103,20 +170,15 @@ export function ConversationList({ onOpenNewChat, onOpenNewGroup }) {
 
             const activeTyping = (typingUsers[convId] || []).filter((u) => u !== currentUser?.username);
             const isTyping = activeTyping.length > 0;
-
             const lastMsg = conv.lastMessage;
-            const formattedTime = lastMsg?.createdAt
-              ? formatDistanceToNowStrict(new Date(lastMsg.createdAt), { addSuffix: false })
-              : '';
+            const isLastMsgOutgoing = lastMsg && String(lastMsg.sender?._id || lastMsg.sender) === String(currentUser?._id || currentUser?.id);
 
             return (
               <div
                 key={convId}
                 onClick={() => setActiveConversation(conv)}
-                className={`flex items-center gap-3.5 px-4 py-3.5 cursor-pointer transition-all duration-150 relative ${
-                  isActive
-                    ? 'bg-chat-active/90 border-l-4 border-brand-500 pl-3'
-                    : 'hover:bg-chat-hover/70'
+                className={`flex items-center gap-3.5 px-4 py-3 cursor-pointer transition-colors ${
+                  isActive ? 'bg-[#2a3942]' : 'hover:bg-[#202c33]'
                 }`}
               >
                 <Avatar
@@ -128,28 +190,35 @@ export function ConversationList({ onOpenNewChat, onOpenNewGroup }) {
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-semibold text-white truncate">{title}</h4>
-                    {formattedTime && (
-                      <span className="text-[11px] text-chat-muted shrink-0 ml-2">
-                        {formattedTime}
+                  <div className="flex items-center justify-between mb-0.5">
+                    <h4 className="text-sm font-semibold text-[#e9edef] truncate">{title}</h4>
+                    {lastMsg?.createdAt && (
+                      <span className={`text-[11px] shrink-0 ml-2 ${conv.unreadCount > 0 ? 'text-[#00a884] font-bold' : 'text-[#8696a0]'}`}>
+                        {formatChatTime(lastMsg.createdAt)}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
-                    {isTyping ? (
-                      <span className="text-xs text-brand-400 font-medium italic truncate animate-pulse">
-                        {activeTyping.join(', ')} typing...
-                      </span>
-                    ) : (
-                      <p className="text-xs text-chat-muted truncate">
-                        {lastMsg ? lastMsg.content : 'No messages yet'}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-1 min-w-0 text-xs">
+                      {isLastMsgOutgoing && (
+                        <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb] shrink-0" />
+                      )}
+                      {isTyping ? (
+                        <span className="text-[#00a884] font-medium animate-pulse truncate">
+                          {activeTyping.join(', ')} typing...
+                        </span>
+                      ) : (
+                        <p className="text-[#8696a0] truncate">
+                          {lastMsg ? lastMsg.content : 'Tap to chat'}
+                        </p>
+                      )}
+                    </div>
 
                     {conv.unreadCount > 0 && (
-                      <Badge variant="counter">{conv.unreadCount}</Badge>
+                      <span className="w-5 h-5 rounded-full bg-[#25D366] text-[#111b21] text-[11px] font-bold flex items-center justify-center shrink-0">
+                        {conv.unreadCount}
+                      </span>
                     )}
                   </div>
                 </div>

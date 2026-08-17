@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Check, CheckCheck, Clock, Smile, CornerUpLeft, Trash2, Play } from 'lucide-react';
+import { Check, CheckCheck, Clock, Smile, CornerUpLeft, Trash2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore.js';
 import { socketManager } from '../../socket/socket.js';
 import { SOCKET_EVENTS } from '../../utils/constants.js';
 import { VoiceNotePlayer } from './VoiceNotePlayer.jsx';
 import { format } from 'date-fns';
 
-const QUICK_EMOJIS = ['❤️', '👍', '🔥', '😂', '😮', '😢'];
+const QUICK_EMOJIS = ['❤️', '👍', '😂', '😮', '😢', '🙏'];
 
 export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
   const currentUser = useAuthStore((s) => s.user);
@@ -30,15 +30,15 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
     const status = message.status || 'sent';
 
     if (status === 'sending') {
-      return <Clock className="w-3 h-3 text-white/60 animate-spin" />;
+      return <Clock className="w-3 h-3 text-[#8696a0] animate-spin" />;
     }
     if (status === 'delivered') {
-      return <CheckCheck className="w-3.5 h-3.5 text-white/70" />;
+      return <CheckCheck className="w-3.5 h-3.5 text-[#8696a0]" />;
     }
     if (status === 'read') {
-      return <CheckCheck className="w-3.5 h-3.5 text-sky-400" />;
+      return <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb]" />;
     }
-    return <Check className="w-3 h-3 text-white/70" />;
+    return <Check className="w-3 h-3 text-[#8696a0]" />;
   };
 
   const formattedTime = message.createdAt
@@ -47,27 +47,27 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
 
   return (
     <div
-      className={`group relative flex flex-col mb-2.5 max-w-[85%] md:max-w-[70%] ${
+      className={`group relative flex flex-col mb-2 max-w-[85%] sm:max-w-[70%] lg:max-w-[65%] ${
         isOutgoing ? 'ml-auto items-end' : 'mr-auto items-start'
       }`}
     >
-      {/* Quick Action Overlay (Hover) */}
+      {/* Quick Action Hover Menu */}
       <div
-        className={`absolute -top-7 hidden group-hover:flex items-center gap-1 bg-chat-sidebar/95 border border-chat-border px-1.5 py-1 rounded-xl shadow-lg z-10 transition-opacity ${
+        className={`absolute -top-7 hidden group-hover:flex items-center gap-1 bg-[#233138] border border-[#2a3942] px-1.5 py-0.5 rounded-lg shadow-lg z-10 transition-opacity ${
           isOutgoing ? 'right-0' : 'left-0'
         }`}
       >
         <div className="relative">
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="p-1 rounded-lg text-chat-muted hover:text-amber-400 hover:bg-chat-hover transition-colors"
+            className="p-1 rounded-md text-[#8696a0] hover:text-[#e9edef] transition-colors"
             title="React"
           >
             <Smile className="w-3.5 h-3.5" />
           </button>
 
           {showPicker && (
-            <div className="absolute top-8 left-0 flex items-center gap-1.5 bg-chat-panel border border-chat-border p-1.5 rounded-2xl shadow-2xl z-20">
+            <div className="absolute top-8 left-0 flex items-center gap-1.5 bg-[#233138] border border-[#2a3942] p-1.5 rounded-2xl shadow-2xl z-20">
               {QUICK_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
@@ -84,7 +84,7 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
         {onReply && (
           <button
             onClick={() => onReply(message)}
-            className="p-1 rounded-lg text-chat-muted hover:text-white hover:bg-chat-hover transition-colors"
+            className="p-1 rounded-md text-[#8696a0] hover:text-[#e9edef] transition-colors"
             title="Reply"
           >
             <CornerUpLeft className="w-3.5 h-3.5" />
@@ -94,7 +94,7 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
         {isOutgoing && onDelete && (
           <button
             onClick={() => onDelete(message._id || message.id)}
-            className="p-1 rounded-lg text-chat-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="p-1 rounded-md text-[#8696a0] hover:text-rose-400 transition-colors"
             title="Delete"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -102,23 +102,27 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
         )}
       </div>
 
-      {/* Bubble Container */}
+      {/* WhatsApp Message Bubble Container */}
       <div
-        className={`relative px-4 py-2.5 rounded-2xl shadow-sm transition-all text-sm leading-relaxed ${
+        className={`relative px-3 pt-2 pb-1.5 rounded-lg shadow-sm text-sm text-[#e9edef] ${
           isOutgoing
-            ? 'bg-gradient-to-tr from-brand-600 to-indigo-600 text-white rounded-br-sm'
-            : 'bg-chat-bubbleIn text-chat-bubbleText border border-chat-border/40 rounded-bl-sm'
+            ? 'bubble-outgoing text-[#e9edef]'
+            : 'bubble-incoming text-[#e9edef]'
         }`}
       >
-        {/* Reply Context Header */}
+        {/* Quoted Reply Box */}
         {message.replyTo && (
-          <div className="mb-2 p-2 rounded-lg bg-black/20 border-l-2 border-brand-400 text-xs opacity-90">
-            <p className="font-semibold">{message.replyTo.sender?.displayName || 'User'}</p>
-            <p className="truncate line-clamp-1">{message.replyTo.content || `[${message.replyTo.type}]`}</p>
+          <div className="mb-1.5 p-2 rounded-md bg-[#000000]/25 border-l-4 border-[#00a884] text-xs">
+            <p className="font-semibold text-[#00a884]">
+              {message.replyTo.sender?.displayName || 'User'}
+            </p>
+            <p className="text-[#8696a0] truncate line-clamp-1">
+              {message.replyTo.content || `[${message.replyTo.type}]`}
+            </p>
           </div>
         )}
 
-        {/* 1. Voice Note Player */}
+        {/* 1. WhatsApp Voice Note */}
         {message.type === 'voice_note' && message.mediaUrl && (
           <VoiceNotePlayer
             audioUrl={message.mediaUrl}
@@ -127,55 +131,57 @@ export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
           />
         )}
 
-        {/* 2. Photo Image Attachment */}
+        {/* 2. WhatsApp Photo Attachment */}
         {message.type === 'image' && message.mediaUrl && (
           <div
             onClick={() => onViewMedia && onViewMedia({ url: message.mediaUrl, type: 'image', caption: message.content })}
-            className="cursor-pointer rounded-xl overflow-hidden mb-2 group/img relative"
+            className="cursor-pointer rounded-lg overflow-hidden mb-1.5 group/img"
           >
             <img
               src={message.mediaUrl}
-              alt="Photo attachment"
-              className="rounded-xl max-h-64 w-auto object-cover ring-1 ring-black/20 transition-transform group-hover/img:scale-102"
+              alt="Photo"
+              className="rounded-lg max-h-72 w-auto object-cover transition-transform group-hover/img:scale-101"
             />
           </div>
         )}
 
-        {/* 3. Video Attachment */}
+        {/* 3. WhatsApp Video Attachment */}
         {message.type === 'video' && message.mediaUrl && (
-          <div className="rounded-xl overflow-hidden mb-2 max-h-72 max-w-sm">
+          <div className="rounded-lg overflow-hidden mb-1.5 max-h-72 max-w-sm">
             <video
               src={message.mediaUrl}
               controls
               playsInline
-              className="rounded-xl w-full max-h-72 object-contain bg-black/40 ring-1 ring-black/20"
+              className="rounded-lg w-full max-h-72 object-contain bg-black/40"
             />
           </div>
         )}
 
-        {/* Message Text Content */}
+        {/* Message Content & Inline Timestamp */}
         {message.isDeleted ? (
-          <p className="italic opacity-60 text-xs">This message was deleted</p>
+          <p className="italic text-[#8696a0] text-xs">This message was deleted</p>
         ) : (
           message.content && (
-            <p className="break-words whitespace-pre-wrap">{message.content}</p>
+            <p className="break-words whitespace-pre-wrap leading-relaxed pr-14 inline-block">
+              {message.content}
+            </p>
           )
         )}
 
-        {/* Timestamp & Status footer */}
-        <div className="flex items-center justify-end gap-1.5 mt-1 text-[10px] opacity-70">
+        {/* Bottom-right embedded timestamp & tick mark */}
+        <div className="float-right flex items-center gap-1 ml-2 mt-1 text-[11px] text-[#8696a0] select-none">
           <span>{formattedTime}</span>
           {renderStatus()}
         </div>
       </div>
 
-      {/* Emoji Reactions Bar */}
+      {/* Floating Emoji Reactions Badge */}
       {message.reactions && message.reactions.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1 z-0">
+        <div className={`flex flex-wrap gap-1 -mt-2.5 z-0 ${isOutgoing ? 'mr-1' : 'ml-1'}`}>
           {message.reactions.map((r, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 bg-chat-sidebar/90 border border-chat-border/60 text-xs px-1.5 py-0.5 rounded-full shadow-sm select-none"
+              className="inline-flex items-center bg-[#202c33] border border-[#2a3942] text-xs px-1.5 py-0.5 rounded-full shadow-md select-none"
             >
               {r.emoji}
             </span>
