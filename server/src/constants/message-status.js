@@ -9,8 +9,10 @@ export const MessageStatus = {
 export const MessageTypes = {
   TEXT: 'text',
   IMAGE: 'image',
-  FILE: 'file',
+  VIDEO: 'video',
+  VOICE_NOTE: 'voice_note',
   AUDIO: 'audio',
+  FILE: 'file',
   SYSTEM: 'system',
 };
 

@@ -61,7 +61,7 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['text', 'image', 'file', 'audio', 'system'],
+      enum: ['text', 'image', 'video', 'voice_note', 'file', 'audio', 'system'],
       default: 'text',
     },
     mediaUrl: {
@@ -72,7 +72,8 @@ const messageSchema = new mongoose.Schema(
       fileName: String,
       fileSize: Number,
       mimeType: String,
-      duration: Number,
+      duration: Number, // Audio/Voice Note or Video duration in seconds
+      thumbnail: String, // Video or Image thumbnail preview
     },
     status: {
       type: String,
