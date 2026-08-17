@@ -71,11 +71,26 @@ export class MessageService {
       status: MessageStatus.SENT,
     });
 
+    // Generate rich last message preview
+    let previewText = message.content;
+    if (type === 'voice_note') {
+      const dur = message.mediaMeta?.duration ? ` (${Math.round(message.mediaMeta.duration)}s)` : '';
+      previewText = `🎤 Voice note${dur}`;
+    } else if (type === 'image') {
+      previewText = '📷 Photo' + (message.content ? `: ${message.content}` : '');
+    } else if (type === 'video') {
+      previewText = '🎥 Video' + (message.content ? `: ${message.content}` : '');
+    } else if (type === 'audio') {
+      previewText = '🎵 Audio track';
+    } else if (type === 'file') {
+      previewText = `📎 ${message.mediaMeta?.fileName || 'Attachment'}`;
+    }
+
     // Update conversation lastMessage preview
     await this.convRepo.updateLastMessage(conversationId, {
       messageId: message._id,
       sender: sId,
-      content: type === 'text' ? message.content : `[${type}]`,
+      content: previewText,
       type,
       createdAt: message.createdAt,
     });
