@@ -1,13 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Smile, Paperclip, X, Image as ImageIcon } from 'lucide-react';
+import { Send, Smile, Paperclip, X, Image as ImageIcon, Mic } from 'lucide-react';
 import { useTypingEmitter } from '../../hooks/useTypingEmitter.js';
 import { useSound } from '../../hooks/useSound.js';
+import { VoiceNoteRecorder } from './VoiceNoteRecorder.jsx';
+import { MediaUploadModal } from '../modals/MediaUploadModal.jsx';
 
 const COMMON_EMOJIS = ['😊', '😂', '🔥', '❤️', '👍', '🎉', '🚀', '💯', '✨', '👋', '🙏', '😍', '😎', '🙌'];
 
 export function MessageComposer({ conversationId, onSendMessage, replyingTo, onCancelReply }) {
   const [content, setContent] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+
   const textareaRef = useRef(null);
   const { emitTyping, stopTypingNow } = useTypingEmitter(conversationId);
   const { playSent } = useSound();
@@ -38,6 +43,18 @@ export function MessageComposer({ conversationId, onSendMessage, replyingTo, onC
     playSent();
   };
 
+  const handleSendVoiceNote = (dataUrl, duration, mimeType) => {
+    setIsRecordingVoice(false);
+    onSendMessage('', 'voice_note', dataUrl, replyingTo, { duration, mimeType });
+    playSent();
+  };
+
+  const handleSendMedia = async (mediaPayload) => {
+    const { dataUrl, type, caption, fileName, mimeType } = mediaPayload;
+    onSendMessage(caption || '', type, dataUrl, replyingTo, { fileName, mimeType });
+    playSent();
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -62,7 +79,7 @@ export function MessageComposer({ conversationId, onSendMessage, replyingTo, onC
             <span className="font-semibold text-brand-400">
               Replying to {replyingTo.sender?.displayName || 'User'}
             </span>
-            <p className="text-chat-muted truncate">{replyingTo.content}</p>
+            <p className="text-chat-muted truncate">{replyingTo.content || `[${replyingTo.type}]`}</p>
           </div>
           <button
             onClick={onCancelReply}
@@ -88,44 +105,74 @@ export function MessageComposer({ conversationId, onSendMessage, replyingTo, onC
         </div>
       )}
 
-      {/* Composer Input Bar */}
-      <div className="flex items-end gap-2 bg-chat-panel border border-chat-border/80 rounded-2xl px-3 py-1.5 focus-within:border-brand-500 transition-colors">
-        {/* Emoji Button */}
-        <button
-          type="button"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="p-2 text-chat-muted hover:text-amber-400 hover:bg-chat-hover rounded-xl transition-colors shrink-0 mb-0.5"
-          title="Insert Emoji"
-        >
-          <Smile className="w-5 h-5" />
-        </button>
-
-        {/* Text Area */}
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          rows={1}
-          className="flex-1 bg-transparent text-chat-bubbleText text-sm outline-none resize-none py-2 max-h-32 placeholder:text-chat-muted/60"
+      {/* Voice Note Recorder Mode vs Standard Input Bar */}
+      {isRecordingVoice ? (
+        <VoiceNoteRecorder
+          onSendVoiceNote={handleSendVoiceNote}
+          onCancel={() => setIsRecordingVoice(false)}
         />
+      ) : (
+        <div className="flex items-end gap-2 bg-chat-panel border border-chat-border/80 rounded-2xl px-3 py-1.5 focus-within:border-brand-500 transition-colors">
+          {/* Emoji Button */}
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="p-2 text-chat-muted hover:text-amber-400 hover:bg-chat-hover rounded-xl transition-colors shrink-0 mb-0.5"
+            title="Insert Emoji"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
 
-        {/* Send Button */}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={!content.trim()}
-          className={`p-2 rounded-xl transition-all shrink-0 mb-0.5 ${
-            content.trim()
-              ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-sm scale-100'
-              : 'text-chat-muted opacity-40 cursor-not-allowed'
-          }`}
-          title="Send"
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </div>
+          {/* Attach Photo / Video Button */}
+          <button
+            type="button"
+            onClick={() => setIsMediaModalOpen(true)}
+            className="p-2 text-chat-muted hover:text-brand-400 hover:bg-chat-hover rounded-xl transition-colors shrink-0 mb-0.5"
+            title="Attach Photo or Video"
+          >
+            <ImageIcon className="w-5 h-5" />
+          </button>
+
+          {/* Text Area */}
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            rows={1}
+            className="flex-1 bg-transparent text-chat-bubbleText text-sm outline-none resize-none py-2 max-h-32 placeholder:text-chat-muted/60"
+          />
+
+          {/* Send or Mic Button */}
+          {content.trim() ? (
+            <button
+              type="button"
+              onClick={handleSend}
+              className="p-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-all shrink-0 mb-0.5"
+              title="Send message"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsRecordingVoice(true)}
+              className="p-2 rounded-xl text-chat-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0 mb-0.5"
+              title="Record Voice Note"
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Media Upload Modal */}
+      <MediaUploadModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSendMedia={handleSendMedia}
+      />
     </div>
   );
 }
