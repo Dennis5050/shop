@@ -8,6 +8,7 @@ import groupRoutes from './v1/group.routes.js';
 import postRoutes from './v1/post.routes.js';
 import commentRoutes from './v1/comment.routes.js';
 import notificationRoutes from './v1/notification.routes.js';
+import mediaRoutes from './v1/media.routes.js';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use('/groups', groupRoutes);
 router.use('/posts', postRoutes);
 router.use('/comments', commentRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/media', mediaRoutes);
 
 export default router;
