@@ -7,6 +7,7 @@ import { useCallStore } from '../../store/callStore.js';
 import { Avatar } from '../ui/Avatar.jsx';
 import { MessageBubble } from './MessageBubble.jsx';
 import { MessageComposer } from './MessageComposer.jsx';
+import { MediaLightbox } from './MediaLightbox.jsx';
 
 export function ChatWindow() {
   const activeConversation = useChatStore((s) => s.activeConversation);
@@ -18,6 +19,7 @@ export function ChatWindow() {
   const startCall = useCallStore((s) => s.startCall);
 
   const [replyingTo, setReplyingTo] = useState(null);
+  const [activeMedia, setActiveMedia] = useState(null);
   const messagesEndRef = useRef(null);
 
   const convId = activeConversation ? (activeConversation._id || activeConversation.id) : null;
@@ -132,6 +134,7 @@ export function ChatWindow() {
             key={msg._id || msg.id}
             message={msg}
             onReply={(m) => setReplyingTo(m)}
+            onViewMedia={(media) => setActiveMedia(media)}
           />
         ))}
 
@@ -154,6 +157,12 @@ export function ChatWindow() {
         onSendMessage={handleSendMessage}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
+      />
+
+      {/* Media Lightbox Fullscreen Viewer */}
+      <MediaLightbox
+        media={activeMedia}
+        onClose={() => setActiveMedia(null)}
       />
     </div>
   );
