@@ -11,6 +11,7 @@ import { SOCKET_EVENTS } from '../../src/constants/events.js';
 
 describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
   let server;
+  let io;
   let port;
   let user1, user2, user3;
   let token1, token2, token3;
@@ -29,7 +30,7 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
 
     const app = express();
     server = http.createServer(app);
-    initializeSocketServer(server);
+    io = initializeSocketServer(server);
 
     return new Promise((resolve) => {
       server.listen(0, () => {
@@ -41,7 +42,9 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
 
   after(async () => {
     return new Promise((resolve) => {
-      server.close(resolve);
+      io.close(() => {
+        server.close(resolve);
+      });
     });
   });
 
@@ -69,7 +72,7 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
         caller.emit(
           SOCKET_EVENTS.CALL_INITIATE,
           {
-            receiverId: user2._id,
+            receiverId: String(user2._id),
             callType: 'video',
           },
           (ack) => {
@@ -110,7 +113,7 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
       // Caller sends SDP offer signal
       caller.emit(SOCKET_EVENTS.CALL_SIGNAL, {
         callId: currentCallId,
-        targetUserId: user2._id,
+        targetUserId: String(user2._id),
         signal: { type: 'offer', sdp: 'dummy-sdp-offer-data' },
       });
     });
@@ -132,32 +135,30 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
     });
   });
 
-  it('should return call:busy when recipient is already in another active call', async () => {
-    // Manually register an active call for user2
-    await callService.initiateCall({
-      callerId: user3._id,
-      receiverId: user2._id,
+  it('should return call:busy when recipient is already in another active call', (t, done) => {
+    // Register active call for user2 first
+    callService.initiateCall({
+      callerId: String(user3._id),
+      receiverId: String(user2._id),
       callType: 'voice',
-    });
+    }).then(() => {
+      const caller = ClientSocket(`http://127.0.0.1:${port}`, {
+        auth: { token: token1 },
+        transports: ['websocket'],
+      });
 
-    const caller = ClientSocket(`http://127.0.0.1:${port}`, {
-      auth: { token: token1 },
-      transports: ['websocket'],
-    });
-
-    return new Promise((resolve) => {
       caller.on('connect', () => {
         caller.emit(
           SOCKET_EVENTS.CALL_INITIATE,
           {
-            receiverId: user2._id,
+            receiverId: String(user2._id),
             callType: 'voice',
           },
           (ack) => {
             assert.strictEqual(ack.success, false);
             assert.strictEqual(ack.isBusy, true);
             caller.disconnect();
-            resolve();
+            done();
           }
         );
       });
@@ -183,7 +184,7 @@ describe('WebRTC Voice & Video Call Signaling Integration Suite', () => {
         caller.emit(
           SOCKET_EVENTS.CALL_INITIATE,
           {
-            receiverId: user2._id,
+            receiverId: String(user2._id),
             callType: 'voice',
           }
         );
