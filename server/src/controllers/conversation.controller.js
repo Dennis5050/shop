@@ -1,4 +1,6 @@
 import { conversationService } from '../services/conversation.service.js';
+import { connectionManager } from '../sockets/connection.manager.js';
+import { SOCKET_EVENTS } from '../constants/events.js';
 import { sendSuccess, sendCreated } from '../utils/response.js';
 
 export const conversationController = {
@@ -9,6 +11,13 @@ export const conversationController = {
     try {
       const { recipientId } = req.body;
       const conversation = await conversationService.getOrCreatePrivateConversation(req.userId, recipientId);
+
+      if (recipientId) {
+        connectionManager.emitToUser(recipientId, SOCKET_EVENTS.CONVERSATION_CREATED, {
+          conversation,
+        });
+      }
+
       return sendCreated(res, { conversation });
     } catch (error) {
       next(error);

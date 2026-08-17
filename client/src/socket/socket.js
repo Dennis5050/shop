@@ -4,10 +4,14 @@ class SocketManager {
   constructor() {
     this.socket = null;
     this.isConnected = false;
-    this.listeners = new Map();
+    this.token = null;
   }
 
   connect(token) {
+    const authToken = token || this.token || localStorage.getItem('nexus_token');
+    if (!authToken) return null;
+    this.token = authToken;
+
     if (this.socket && this.isConnected) {
       return this.socket;
     }
@@ -16,21 +20,20 @@ class SocketManager {
       this.socket.disconnect();
     }
 
-    const authToken = token || localStorage.getItem('nexus_token');
-    if (!authToken) return null;
-
+    // Connect using relative origin with fallback transports
     this.socket = io('/', {
       auth: { token: authToken },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     this.socket.on('connect', () => {
       this.isConnected = true;
-      console.log('⚡ Socket.IO Connected:', this.socket.id);
+      console.log('⚡ Socket.IO Connected successfully:', this.socket.id);
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -50,21 +53,30 @@ class SocketManager {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.token = null;
     }
   }
 
   getSocket() {
+    if (!this.socket && localStorage.getItem('nexus_token')) {
+      return this.connect();
+    }
     return this.socket;
   }
 
   emit(event, data, callback) {
-    if (!this.socket) return;
-    this.socket.emit(event, data, callback);
+    const socket = this.getSocket();
+    if (!socket) {
+      if (typeof callback === 'function') callback({ success: false, error: 'Socket not connected' });
+      return;
+    }
+    socket.emit(event, data, callback);
   }
 
   on(event, listener) {
-    if (!this.socket) return;
-    this.socket.on(event, listener);
+    const socket = this.getSocket();
+    if (!socket) return;
+    socket.on(event, listener);
   }
 
   off(event, listener) {

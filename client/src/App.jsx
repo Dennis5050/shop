@@ -12,6 +12,8 @@ import { NotificationDrawer } from './components/notifications/NotificationDrawe
 import { NewChatModal } from './components/modals/NewChatModal.jsx';
 import { NewGroupModal } from './components/modals/NewGroupModal.jsx';
 import { ProfileModal } from './components/modals/ProfileModal.jsx';
+import { IncomingCallDialog } from './components/call/IncomingCallDialog.jsx';
+import { CallOverlay } from './components/call/CallOverlay.jsx';
 
 export function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -88,6 +90,10 @@ export function App() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />
+
+      {/* WebRTC Real-Time Calling Interface */}
+      <IncomingCallDialog />
+      <CallOverlay />
     </div>
   );
 }

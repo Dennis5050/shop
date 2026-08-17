@@ -3,6 +3,7 @@ import { Phone, Video, MoreVertical, MessageSquare } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore.js';
 import { useAuthStore } from '../../store/authStore.js';
 import { usePresenceStore } from '../../store/presenceStore.js';
+import { useCallStore } from '../../store/callStore.js';
 import { Avatar } from '../ui/Avatar.jsx';
 import { MessageBubble } from './MessageBubble.jsx';
 import { MessageComposer } from './MessageComposer.jsx';
@@ -14,6 +15,7 @@ export function ChatWindow() {
   const typingUsers = useChatStore((s) => s.typingUsers);
   const isUserOnline = usePresenceStore((s) => s.isOnline);
   const currentUser = useAuthStore((s) => s.user);
+  const startCall = useCallStore((s) => s.startCall);
 
   const [replyingTo, setReplyingTo] = useState(null);
   const messagesEndRef = useRef(null);
@@ -93,12 +95,30 @@ export function ChatWindow() {
 
         {/* Action icons */}
         <div className="flex items-center gap-2 text-chat-muted">
-          <button className="p-2 rounded-xl hover:text-white hover:bg-chat-hover transition-colors" title="Voice Call">
-            <Phone className="w-4 h-4" />
-          </button>
-          <button className="p-2 rounded-xl hover:text-white hover:bg-chat-hover transition-colors" title="Video Call">
-            <Video className="w-4 h-4" />
-          </button>
+          {!isGroup && (
+            <>
+              <button
+                onClick={() => {
+                  const targetUser = activeConversation.otherUser || (activeConversation.participants || []).find((p) => String(p._id || p) !== String(currentUser?._id || currentUser?.id));
+                  if (targetUser) startCall(targetUser, 'voice', convId);
+                }}
+                className="p-2 rounded-xl hover:text-white hover:bg-chat-hover transition-colors"
+                title="Voice Call"
+              >
+                <Phone className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  const targetUser = activeConversation.otherUser || (activeConversation.participants || []).find((p) => String(p._id || p) !== String(currentUser?._id || currentUser?.id));
+                  if (targetUser) startCall(targetUser, 'video', convId);
+                }}
+                className="p-2 rounded-xl hover:text-white hover:bg-chat-hover transition-colors"
+                title="Video Call"
+              >
+                <Video className="w-4 h-4" />
+              </button>
+            </>
+          )}
           <button className="p-2 rounded-xl hover:text-white hover:bg-chat-hover transition-colors" title="Options">
             <MoreVertical className="w-4 h-4" />
           </button>
