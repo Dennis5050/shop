@@ -1,7 +1,9 @@
-import React, { useRef, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, User } from 'lucide-react';
+import React from 'react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import { useCallStore } from '../../store/callStore.js';
 import { Avatar } from '../ui/Avatar.jsx';
+import { VideoCallView } from './VideoCallView.jsx';
+import { VoiceCallView } from './VoiceCallView.jsx';
 
 export function CallOverlay() {
   const callState = useCallStore((s) => s.callState);
@@ -11,28 +13,12 @@ export function CallOverlay() {
   const remoteStream = useCallStore((s) => s.remoteStream);
   const isMuted = useCallStore((s) => s.isMuted);
   const isVideoOff = useCallStore((s) => s.isVideoOff);
+  const connectionStatus = useCallStore((s) => s.connectionStatus);
   const callDuration = useCallStore((s) => s.callDuration);
   const errorMessage = useCallStore((s) => s.errorMessage);
   const toggleMute = useCallStore((s) => s.toggleMute);
   const toggleVideo = useCallStore((s) => s.toggleVideo);
   const endCall = useCallStore((s) => s.endCall);
-
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-
-  // Attach local stream
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream, callType]);
-
-  // Attach remote stream
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream, callType]);
 
   if (callState === 'idle' || callState === 'incoming_ringing') {
     return null;
@@ -81,75 +67,22 @@ export function CallOverlay() {
       </div>
 
       {/* Center Viewport */}
-      <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden rounded-3xl bg-slate-900 border border-slate-800">
+      <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden rounded-3xl">
         {isVideo ? (
-          <>
-            {/* Remote Video (Full Size) */}
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover rounded-3xl"
-            />
-
-            {!remoteStream && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-4">
-                <Avatar
-                  src={remoteUser?.avatar}
-                  name={remoteUser?.displayName || remoteUser?.username}
-                  size="2xl"
-                  className="mb-4 animate-pulse ring-4 ring-brand-500/40"
-                />
-                <h4 className="text-lg font-bold text-white">
-                  {remoteUser?.displayName || remoteUser?.username}
-                </h4>
-                <p className="text-xs text-chat-muted mt-1">Connecting video stream...</p>
-              </div>
-            )}
-
-            {/* Local Video PIP (Draggable/Corner Box) */}
-            <div className="absolute bottom-4 right-4 w-32 sm:w-48 aspect-video rounded-2xl overflow-hidden border-2 border-brand-500/80 shadow-2xl bg-black z-20">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className={`w-full h-full object-cover ${isVideoOff ? 'hidden' : 'block'}`}
-              />
-              {isVideoOff && (
-                <div className="w-full h-full flex items-center justify-center bg-slate-800 text-chat-muted text-xs font-semibold">
-                  Camera Off
-                </div>
-              )}
-            </div>
-          </>
+          <VideoCallView
+            remoteUser={remoteUser}
+            localStream={localStream}
+            remoteStream={remoteStream}
+            isVideoOff={isVideoOff}
+            connectionStatus={connectionStatus}
+          />
         ) : (
-          /* Voice Call Audio Pulse View */
-          <div className="flex flex-col items-center justify-center text-center p-8">
-            <div className="relative inline-flex items-center justify-center mb-6">
-              {isConnected && (
-                <>
-                  <span className="absolute w-36 h-36 rounded-full bg-emerald-500/10 animate-ping" />
-                  <span className="absolute w-28 h-28 rounded-full bg-emerald-500/20 animate-pulse" />
-                </>
-              )}
-              {callState === 'outgoing_ringing' && (
-                <span className="absolute w-32 h-32 rounded-full bg-brand-500/20 animate-ping" />
-              )}
-              <Avatar
-                src={remoteUser?.avatar}
-                name={remoteUser?.displayName || remoteUser?.username}
-                size="2xl"
-                className="ring-4 ring-slate-700 shadow-2xl relative z-10"
-              />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-1">
-              {remoteUser?.displayName || remoteUser?.username}
-            </h3>
-            <p className="text-xs text-chat-muted">
-              {callState === 'outgoing_ringing' ? 'Calling...' : isConnected ? 'Voice Connected' : 'Call Ending'}
-            </p>
-          </div>
+          <VoiceCallView
+            remoteUser={remoteUser}
+            callState={callState}
+            isConnected={isConnected}
+            isMuted={isMuted}
+          />
         )}
       </div>
 
