@@ -60,7 +60,7 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  sendMessage: async (content, type = 'text', mediaUrl = '', replyTo = null) => {
+  sendMessage: async (content, type = 'text', mediaUrl = '', replyTo = null, mediaMeta = null) => {
     const active = get().activeConversation;
     if (!active) return;
 
@@ -75,6 +75,7 @@ export const useChatStore = create((set, get) => ({
       content,
       type,
       mediaUrl,
+      mediaMeta,
       replyTo,
       status: 'sending',
       createdAt: new Date().toISOString(),
@@ -89,6 +90,7 @@ export const useChatStore = create((set, get) => ({
       content,
       type,
       mediaUrl,
+      mediaMeta,
       replyTo: replyTo ? String(replyTo._id || replyTo.id) : null,
     };
 
