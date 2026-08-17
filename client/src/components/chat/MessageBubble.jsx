@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Check, CheckCheck, Clock, Smile, CornerUpLeft, Trash2 } from 'lucide-react';
+import { Check, CheckCheck, Clock, Smile, CornerUpLeft, Trash2, Play } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore.js';
 import { socketManager } from '../../socket/socket.js';
 import { SOCKET_EVENTS } from '../../utils/constants.js';
+import { VoiceNotePlayer } from './VoiceNotePlayer.jsx';
 import { format } from 'date-fns';
 
 const QUICK_EMOJIS = ['❤️', '👍', '🔥', '😂', '😮', '😢'];
 
-export function MessageBubble({ message, onReply, onDelete }) {
+export function MessageBubble({ message, onReply, onDelete, onViewMedia }) {
   const currentUser = useAuthStore((s) => s.user);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -113,24 +114,52 @@ export function MessageBubble({ message, onReply, onDelete }) {
         {message.replyTo && (
           <div className="mb-2 p-2 rounded-lg bg-black/20 border-l-2 border-brand-400 text-xs opacity-90">
             <p className="font-semibold">{message.replyTo.sender?.displayName || 'User'}</p>
-            <p className="truncate line-clamp-1">{message.replyTo.content}</p>
+            <p className="truncate line-clamp-1">{message.replyTo.content || `[${message.replyTo.type}]`}</p>
           </div>
         )}
 
-        {/* Media Image / File */}
-        {message.mediaUrl && message.type === 'image' && (
-          <img
-            src={message.mediaUrl}
-            alt="Message attachment"
-            className="rounded-xl max-h-60 w-auto object-cover mb-2 ring-1 ring-black/20"
+        {/* 1. Voice Note Player */}
+        {message.type === 'voice_note' && message.mediaUrl && (
+          <VoiceNotePlayer
+            audioUrl={message.mediaUrl}
+            duration={message.mediaMeta?.duration || 0}
+            isOutgoing={isOutgoing}
           />
         )}
 
-        {/* Message Content */}
+        {/* 2. Photo Image Attachment */}
+        {message.type === 'image' && message.mediaUrl && (
+          <div
+            onClick={() => onViewMedia && onViewMedia({ url: message.mediaUrl, type: 'image', caption: message.content })}
+            className="cursor-pointer rounded-xl overflow-hidden mb-2 group/img relative"
+          >
+            <img
+              src={message.mediaUrl}
+              alt="Photo attachment"
+              className="rounded-xl max-h-64 w-auto object-cover ring-1 ring-black/20 transition-transform group-hover/img:scale-102"
+            />
+          </div>
+        )}
+
+        {/* 3. Video Attachment */}
+        {message.type === 'video' && message.mediaUrl && (
+          <div className="rounded-xl overflow-hidden mb-2 max-h-72 max-w-sm">
+            <video
+              src={message.mediaUrl}
+              controls
+              playsInline
+              className="rounded-xl w-full max-h-72 object-contain bg-black/40 ring-1 ring-black/20"
+            />
+          </div>
+        )}
+
+        {/* Message Text Content */}
         {message.isDeleted ? (
           <p className="italic opacity-60 text-xs">This message was deleted</p>
         ) : (
-          <p className="break-words whitespace-pre-wrap">{message.content}</p>
+          message.content && (
+            <p className="break-words whitespace-pre-wrap">{message.content}</p>
+          )
         )}
 
         {/* Timestamp & Status footer */}
